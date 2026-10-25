@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Сапёр УНО</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{height:100%;margin:0;background:#183226;color:#fff;font-family:Rubik,system-ui,sans-serif;-webkit-tap-highlight-color:transparent}
+#app{max-width:480px;margin:0 auto;height:100%;display:flex;flex-direction:column;gap:8px;padding:8px;box-sizing:border-box;overflow-y:auto}
+button{font:inherit;color:#fff;background:#2E8049;border:0;border-radius:10px;padding:10px 14px;cursor:pointer;margin:4px}
+button.gh{background:#444}button.on{outline:3px solid #F2C94C}button.red{background:#C23B33}
+input{font:inherit;font-size:20px;text-transform:uppercase;width:90px;text-align:center;border-radius:10px;border:2px solid #fff4;background:#0006;color:#fff;padding:8px}
+.ctr{margin:auto;text-align:center}
+#opps{display:flex;flex-wrap:wrap;gap:6px}
+.op{flex:1 1 70px;background:#0006;border-radius:10px;padding:6px;font-size:12px;box-sizing:border-box}
+.op.cur{animation:pulse 1.2s infinite;outline:2px solid #F2C94C}.op.dead{opacity:.35}
+.bar{height:8px;background:#0008;border-radius:4px;margin:4px 0;overflow:hidden}.bar i{display:block;height:100%;background:#E05A52;transition:width .6s}
+#mid{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px}
+#row{display:flex;align-items:center;gap:14px}
+#mines{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}.mn{background:#444;border-radius:12px;padding:3px 10px;font-size:13px}
+#log{font-size:13px;text-align:center;min-height:80px;opacity:.9}#log div:first-child{font-weight:700}
+#hand{display:flex;gap:4px;overflow-x:auto;padding:6px 0}#hand>div{flex:none}.dim{opacity:.4}
+#m{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;z-index:9}
+#m[hidden]{display:none}.box{background:#183226;border:2px solid #fff3;border-radius:16px;padding:16px;max-width:340px;text-align:center}
+#toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:#C23B33;border-radius:10px;padding:8px 14px;z-index:10;font-size:14px}
+#toast:empty{display:none}
+.code{font-size:44px;font-weight:700;letter-spacing:.15em}
+.c{width:150px;height:220px;border-radius:16px;position:relative;display:flex;align-items:center;justify-content:center;color:#fff;box-sizing:border-box;border:4px solid #fff;background:linear-gradient(155deg,var(--a),var(--k));box-shadow:0 8px 16px rgba(0,0,0,.4),inset 0 0 0 2px rgba(0,0,0,.15)}
+.o{width:104px;height:156px;border-radius:50%;background:radial-gradient(circle at 35% 25%,#fff,#E9E6DF);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--t);box-shadow:0 0 0 4px rgba(255,255,255,.3)}
+.n{position:absolute;font-weight:700;font-size:20px}.t{top:10px;left:12px}.b{bottom:10px;right:12px;transform:rotate(180deg)}
+.g{font-size:56px;font-weight:700;line-height:1}.s{font-size:34px}.l{font-size:11px;letter-spacing:.06em;font-weight:700}
+.wl{position:absolute;bottom:10px;font-size:11px;font-weight:700}
+h3{margin:0 0 8px}
+@keyframes pop{from{transform:scale(.4) rotate(-14deg);opacity:0}to{transform:none;opacity:1}}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@keyframes flash{50%{background:#E05A52}}
+@keyframes up{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-50px)}}
+@keyframes boom{0%{transform:translate(-50%,-50%) scale(.3);opacity:1}100%{transform:translate(-50%,-50%) scale(3);opacity:0}}
+@keyframes pulse{50%{box-shadow:0 0 0 6px #F2C94C66}}
+@keyframes slide{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.pop{animation:pop .5s ease-out}.hit{animation:shake .45s,flash .45s}.new{animation:slide .45s}
+.fl{position:fixed;font-weight:700;font-size:22px;color:#fff;background:#C23B33;border-radius:10px;padding:2px 10px;animation:up 1.6s forwards;pointer-events:none;z-index:8}
+.bm{position:fixed;left:50%;top:40%;font-size:90px;animation:boom 1s forwards;pointer-events:none;z-index:8}
+.smp{display:inline-block;width:46%;vertical-align:top}.smp small{display:block;font-weight:400;font-size:11px;opacity:.9}
+#wrap{position:relative;margin-bottom:42px;border-radius:12px;box-shadow:0 10px 26px #0007,0 0 0 4px #ffd54a,0 0 0 7px #7a4b12}
+#bd{display:grid;grid-template-columns:repeat(10,minmax(0,1fr));border-radius:9px;overflow:hidden}
+.sc{position:relative;min-width:0;min-height:0;aspect-ratio:1;overflow:hidden;background:linear-gradient(145deg,var(--sa),var(--sb))}
+.sc.sd{background:linear-gradient(145deg,var(--sb),var(--sa))}
+.sc span{display:grid;place-items:center;height:100%;padding-top:5px;box-sizing:border-box;font-size:clamp(11px,3.3vw,17px)}
+.k-D{box-shadow:inset 0 0 0 50px #e74c3c88}.k-H{box-shadow:inset 0 0 0 50px #2ecc7188}.k-R{box-shadow:inset 0 0 0 50px #8b5a2b99}.k-X{box-shadow:inset 0 0 0 50px #9b59b688}.k-C{box-shadow:inset 0 0 0 50px #3498db88}
+.sc.fin{background:radial-gradient(circle,#fff6b0,#ffc61a);animation:gl 1.4s infinite alternate}@keyframes gl{to{filter:brightness(1.25)}}
+#sv,#tks{position:absolute;inset:0;pointer-events:none;width:100%;height:100%}
+.tok{position:absolute;width:6%;aspect-ratio:1;margin:-3% 0 0 -3%;border-radius:50%;display:grid;place-items:center;font-size:clamp(9px,3vw,15px);border:2px solid #fff;box-shadow:0 2px 5px #0009,inset 0 -3px 4px #0005;transition:left calc(.04s*var(--sp,2)) linear,top calc(.04s*var(--sp,2)) linear;z-index:2}
+.tok.sl{transition:left calc(.33s*var(--sp,2)) ease-in-out,top calc(.33s*var(--sp,2)) ease-in-out}.tok.me{z-index:3;box-shadow:0 0 0 3px #ffd54a,0 2px 5px #0009}
+#ctl{position:sticky;bottom:0;margin:0 -10px;padding:8px 10px 6px;background:linear-gradient(#0000,#000c 22%);z-index:5}
+.spl{display:inline-block;margin:2px;padding:3px 7px;border-radius:10px;font-size:12px;background:linear-gradient(90deg,#c0392bcc var(--h),#0006 var(--h))}.spl.cur{outline:2px solid #ffd54a;transform:scale(1.07)}
+#srow{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:4px}
+#stage{perspective:400px;width:60px;height:56px;display:grid;place-items:center}
+#dw{width:46px;height:46px}#dw.jump{animation:jump calc(.4s*var(--sp,2))}@keyframes jump{40%{transform:translateY(-22px) scale(1.15)}}
+#cube{width:46px;height:46px;position:relative;transform-style:preserve-3d;transition:transform calc(.45s*var(--sp,2)) cubic-bezier(.2,.8,.3,1)}
+.f{position:absolute;width:46px;height:46px;border-radius:9px;background:linear-gradient(145deg,#fff,#dcd8cf);box-shadow:inset 0 0 6px #0003;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:6px;box-sizing:border-box;backface-visibility:hidden}
+.f i{width:8px;height:8px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#555,#111);place-self:center}.f.one i{background:radial-gradient(circle at 35% 30%,#ff7a6e,#c42f26)}
+#smsg{flex:1;font-weight:700;min-height:34px;display:grid;align-items:center;text-shadow:0 2px 0 #000a}
+body.night{background:linear-gradient(160deg,var(--bg1,#2b1b5a),var(--bg2,#0f5a63)) fixed}
+.tgl{display:grid;grid-template-columns:42px 42px;width:84px;height:34px;border-radius:17px;background:#0006;position:relative;margin:0 auto 6px;cursor:pointer;line-height:34px;font-size:18px}.tgl span{z-index:1}.tgl i{position:absolute;top:2px;left:2px;width:38px;height:30px;border-radius:15px;background:#fff3;transition:transform .35s}.tgl.n i{transform:translateX(42px)}
+#sl{text-align:center;--sa:#f6f0d4;--sb:#d3e8b4;--nf:#4a3512;--ns:#fff}#sl h1{margin:8px 0;font-size:26px;text-shadow:0 3px 0 #0005}
+#sl button{font-weight:700;background:linear-gradient(#3fbf6a,#238a47);padding:9px 14px;margin:3px;box-shadow:0 3px 0 #14502a,0 6px 10px #0004}#sl button:active{transform:translateY(2px)}
+#sl button.r{background:linear-gradient(#ff6a5c,#c42f26);box-shadow:0 3px 0 #7d1a14,0 6px 10px #0004}#sl button.gh{background:#555;box-shadow:none}#sl button:disabled{opacity:.45;pointer-events:none}
+#sl .sr{font-size:12px;text-align:left;line-height:1.5;opacity:.9}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="m" hidden></div>
+<div id="toast"></div>
+<script>
+const $=s=>document.querySelector(s);
+const tg=window.Telegram&&Telegram.WebApp;if(tg){tg.ready();tg.expand()}
+const COL={r:['#E05A52','#C23B33'],b:['#4A8BEA','#2F6FD1'],g:['#4FB36F','#2E8049'],y:['#F2C94C','#E3B21F']};
+const TC=['#C23B33','#2F6FD1'];
+const CN={r:'красный',b:'синий',g:'зелёный',y:'жёлтый'},COLS=Object.keys(COL);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const S='viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"';
+const IC={
+s:'<svg width="62" height="62" viewBox="0 0 80 80"><g stroke="#2B2F38" stroke-width="6" stroke-linecap="round"><path d="M40 10v10M40 60v10M10 40h10M60 40h10M19 19l7 7M61 19l-7 7M19 61l7-7M61 61l-7-7"/></g><circle cx="40" cy="40" r="21" fill="#2B2F38"/><path d="M27 35a14 14 0 0 1 10-11" stroke="#fff" stroke-opacity=".4" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="40" cy="40" r="6" fill="#E04B3F"/></svg>',
+d:`<svg width="40" height="40" ${S} fill="currentColor"><path d="M13 2L4 14h7l-1 8 9-12h-7z"/></svg>`,
+h:`<svg width="40" height="40" ${S} fill="currentColor"><path d="M12 20s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.5-7 10-7 10z"/><path d="M12 9.5v5M9.5 12h5" stroke="#fff"/></svg>`,
+k:'<svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="4.5"><path d="M7 5v7a5 5 0 0 0 10 0V5"/><path d="M7 5v3M17 5v3" stroke="#E04B3F"/></svg>',
+skip:`<svg width="52" height="52" ${S} fill="none"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg>`,
+rev:`<svg width="52" height="52" ${S} fill="none"><path d="M5 9h12M14 6l3 3-3 3M19 15H7M10 12l-3 3 3 3"/></svg>`};
+const TY={
+n:c=>({inner:`<span class=g>${c.v}</span>`,cr:c.v}),
+s:c=>({inner:IC.s+'<span class=l>САПЁР</span>'}),
+d:c=>({col:['#34343E','#17171C'],t:'#C23B33',inner:IC.d+`<span class="g s">+${c.v}</span><span class=l>УРОН</span>`,cr:'+'+c.v}),
+h:c=>({col:['#1FA3A3','#0E7373'],inner:IC.h+`<span class="g s">+${c.v}</span><span class=l>ЛЕЧЕНИЕ</span>`,cr:'+'+c.v}),
+k:c=>({col:['#7B55B4','#5B3A8C'],inner:IC.k+'<span class=l>ДОКОПАЙСЯ</span>'}),
+skip:c=>({inner:IC.skip+'<span class=l>ПРОПУСК</span>'}),
+rev:c=>({inner:IC.rev+'<span class=l>РАЗВОРОТ</span>'}),
+w:c=>({col:['#34343E','#17171C'],w:1,inner:''})};
+function cardEl(c,z){const d=TY[c.t](c),[a,k]=d.col||COL[c.c],t=d.t||(c.c=='y'?'#1A1A1A':k),cc=c.c=='y'?'color:#1A1A1A':'';
+return `<div class="c" style="--a:${a};--k:${k};--t:${t};zoom:${z}">${d.cr?`<span class="n t" style="${cc}">${d.cr}</span>`:''}<div class=o${d.w?' style="background:conic-gradient(#C23B33 0 25%,#2F6FD1 0 50%,#2E8049 0 75%,#E3B21F 0);height:130px;box-shadow:0 0 0 4px #fff"':''}>${d.inner}</div>${d.w?'<span class=wl>СМЕНА ЦВЕТА</span>':''}${d.cr?`<span class="n b" style="${cc}">${d.cr}</span>`:''}</div>`}
+
+const RULES=`💣 Сапёр УНО — правила
+
+🎯 Цель: остаться последним игроком с ХП.
+Режимы: быстрая — 150 ХП, обычная — 300 ХП. Игроков: 2–8. У каждого по 8 карт.
+
+🃏 Ход: клади карту того же цвета или значения, что на столе. Нечего класть — бери одну карту (если она подошла, можно сыграть). Автодобора нет.
+
+💣 Сапёр: ставит мину своего цвета. Второй сапёр того же цвета взрывает её: числа, сыгранные между ними, суммируются, и следующий игрок теряет столько ХП. Два сапёра подряд — следующий теряет половину ХП.
+
+⚡ Урон (+10, +15, +20): бьёшь любого игрока. Если ударили тебя (уроном или взрывом), можно сразу ответить контр-ударом картой урона.
+
+💊 Лечение (+10, +20): лечишь себя, но не выше максимума.
+
+🧲 Докопайся: следующий игрок тянет карты, пока не выпадет карта цвета, который лежал на столе, и сразу кладёт её.
+
+🔋 Перезарядка: сбросил все карты — получаешь +50% от максимума ХП (в командах +25% общего запаса, но не выше максимума) и берёшь 8 новых.
+
+Классика: ⏭ пропуск, 🔄 разворот, 🎨 смена цвета.
+
+👥 Командный режим (1×1, 2×2, 3×3, 4×4 — всего 2, 4, 6 или 8 игроков): общий запас ХП на команду, бить можно только соперников.`;
+let ws,V=null,sel={hp:150,n:2,ts:4,thp:300},TS=[2,4,6,8],TL={2:'1×1',4:'2×2',6:'3×3',8:'4×4'},picking=0,codeIn='',prevHand=0,joined=0;
+const uid=localStorage.uid||(localStorage.uid=Math.random().toString(36).slice(2));
+const send=o=>ws&&ws.readyState==1&&ws.send(JSON.stringify(o));
+function toast(t){const e=$('#toast');e.textContent=t;clearTimeout(toast.t);toast.t=setTimeout(()=>e.textContent='',2000)}
+function conn(){ws=new WebSocket((location.protocol=='https:'?'wss://':'ws://')+location.host);
+ws.onopen=()=>{send({a:'hello',init:tg?tg.initData:'',uid,name:(tg&&tg.initDataUnsafe.user&&tg.initDataUnsafe.user.first_name)||'Гость'});
+const sp=tg&&tg.initDataUnsafe.start_param;
+if(sp&&sp.startsWith('s_')&&!joined){joined=1;G='sl';localStorage.g='sl';theme();render([]);send({a:'s_join',room:sp.slice(2)})}else if(V)send({a:'join',room:V.room});else if(SL.V())send({a:'s_join',room:SL.V().room});else if(sp&&!joined){joined=1;send({a:'join',room:sp})}};
+ws.onmessage=e=>{const m=JSON.parse(e.data);if(m.s=='err'){toast(m.t);return}
+if(m.s=='rules'){modal('<h3>📖 Правила</h3><div style="text-align:left;white-space:pre-wrap;font-size:14px;max-height:60vh;overflow:auto">'+esc(m.t)+'</div><button data-x=1>Понятно</button>',hide);return}
+if(m.s=='sl'){SL.msg(m);return}V=m.v;render(m.ev||[])};
+ws.onclose=()=>setTimeout(conn,1500)}
+const ok=c=>{const t=V.top;if('dhkw'.includes(c.t))return 1;if(c.c==V.col)return 1;return c.t=='n'?(t.t=='n'&&t.v==c.v):(c.t==t.t&&(c.t=='skip'||c.t=='rev'))};
+function modal(h,f){const m=$('#m');m.innerHTML='<div class=box>'+h+'</div>';m.hidden=false;m.onclick=e=>{const b=e.target.closest('button');if(b)f(b)}}
+const hide=()=>{$('#m').hidden=true};
+const pick=(title,opts)=>new Promise(res=>modal(`<h3>${title}</h3>`+opts.map(([k,n,bg])=>`<button style="background:${bg}" data-k="${k}">${esc(n)}</button>`).join('')+'<br><button class=gh data-x=1>Отмена</button>',b=>{hide();if(b.dataset.x)return res(null);const k=b.dataset.k;res(isNaN(+k)?k:+k)}));
+const hpBtns=()=>[150,300].map(v=>`<button data-hp="${v}" class="${sel.hp==v?'on':''}" onclick="sel.hp=${v};render([])">${v==150?'Быстрая · 150 ХП':'Обычная · 300 ХП'}</button>`).join('');
+function menu(){return `<div class=ctr>${tgl()}<h3 style="font-size:28px">💣 Сапёр УНО</h3>${hpBtns()}<br><br>Против компьютера:<br>${[1,2,3].map(v=>`<button class="${sel.n==v?'on':''}" onclick="sel.n=${v};render([])">${v} бот${v>1?'а':''}</button>`).join('')}<br><button class=red onclick="send({a:'solo',hp:sel.hp,n:sel.n})">🤖 Играть</button><br><br>Командами против ботов:<br>${TS.map(v=>`<button class="${sel.ts==v?'on':''}" onclick="sel.ts=${v};render([])">${TL[v]}</button>`).join('')}<br>${[300,600].map(v=>`<button class="${sel.thp==v?'on':''}" onclick="sel.thp=${v};render([])">${v} ХП</button>`).join('')}<br><button class=red onclick="send({a:'solo',team:1,size:sel.ts,hp:sel.thp})">🤖 Играть командой</button><br><br>С друзьями:<br><button onclick="send({a:'create'})">👥 Создать комнату</button><br><input id=ci maxlength=4 placeholder="КОД" value="${esc(codeIn)}" oninput="codeIn=this.value"><button onclick="send({a:'join',room:codeIn})">Войти</button><br><button class=gh onclick="send({a:'rules'})">📖 Правила</button></div>`}
+function rules(){modal(`<div style="text-align:left;white-space:pre-wrap;max-height:65vh;overflow:auto;font-size:14px">${esc(RULES)}</div><button class=gh data-x=1>Закрыть</button>`,hide)}
+function share(){const link=V.bot?`https://t.me/${V.bot}${V.app?'/'+V.app:''}?startapp=${V.room}`:location.href;
+const u='https://t.me/share/url?url='+encodeURIComponent(link)+'&text='+encodeURIComponent('Го играть в Сапёр УНО! Код комнаты: '+V.room);tg?tg.openTelegramLink(u):open(u)}
+function lobby(){const o=V.team?[300,600]:[150,300],hp=o.includes(sel.hp)?sel.hp:o[0];
+const btn=o.map((v,i)=>`<button class="${hp==v?'on':''}" onclick="sel.hp=${v};render([])">${i?'Обычная · ':'Быстрая · '}${v} ХП</button>`).join('');
+const row=p=>`<div>${p.bot?'🤖':'👤'} ${esc(p.name)}</div>`;
+const body=V.team?`<div style="display:flex;gap:10px">${[0,1].map(t=>`<div style="flex:1;background:#0006;border-radius:12px;padding:8px;border-top:4px solid ${TC[t]}"><b>${t?'Синие':'Красные'}</b> ${V.P.filter(p=>p.team==t).length}/${V.size/2}${V.P.map(p=>p.team==t?row(p):'').join('')}</div>`).join('')}</div><button class=gh onclick="send({a:'team',t:${V.P[V.you].team?0:1}})">Перейти в другую команду</button>`:V.P.map(row).join('');
+const host=V.host?`<br><button class="${V.team?'':'on'}" onclick="send({a:'mode',team:false})">Каждый сам</button><button class="${V.team?'on':''}" onclick="send({a:'mode',team:true})">Команды</button>${V.team?`<br>${TS.map(v=>`<button class="${V.size==v?'on':''}" onclick="send({a:'size',n:${v}})">${TL[v]}</button>`).join('')}<br><button class="${V.open?'on':''}" onclick="send({a:'open',on:${!V.open}})">Карты напарника видны: ${V.open?'да':'нет'}</button>`:''}<br>${btn}<br><button onclick="send({a:'bot'})">+ Бот</button>${V.team?`<button onclick="send({a:'fill'})">🤖 Заполнить</button>`:''}<button class=red onclick="send({a:'start',hp:${hp}})">▶ Начать</button>`:'<br>Ждём, пока хозяин начнёт игру…';
+return `<div class=ctr><div>Код комнаты</div><div class=code>${V.room}</div><button onclick="share()">📨 Позвать друзей</button><br><br>${body}${host}<br><button class=gh onclick="leave()">Выйти</button></div>`}
+function leave(){send({a:'leave'});V=null;hide();render([])}
+async function tap(ci){if(!V||V.phase!='play'||V.cur!=V.you||V.cn||V.wait>=0||picking)return;const c=V.hand[ci];if(!c||!ok(c))return;const o={a:'play',ci};picking=1;
+if(c.t=='w'){o.col=await pick('Выбери цвет',COLS.map(k=>[k,CN[k],COL[k][1]]));if(!o.col){picking=0;return}}
+if(c.t=='d'){o.t=await pick('Кого бьём?',V.P.map((p,j)=>[j,p.name,'#444']).filter(x=>x[0]!=V.you&&V.P[x[0]].alive&&(!V.team||V.P[x[0]].team!=V.P[V.you].team)));if(o.t===null){picking=0;return}}
+picking=0;send(o)}
+function drawBtn(){if(!V||V.phase!='play'||V.cur!=V.you||V.drawn||V.cn||V.wait>=0)return;if(V.hand.some(ok)){toast('Есть что положить — тянуть нельзя');return}send({a:'draw'})}
+function render(ev){const A=$('#app');if(G=='sl'){SL.render();return}
+if(!V){A.innerHTML=menu();hide();return}
+if(V.phase=='lobby'){A.innerHTML=lobby();hide();return}
+const me=V.P[V.you],my=V.cur==V.you&&V.phase=='play'&&!V.cn&&V.wait<0;
+const opps=V.P.map((p,j)=>j==V.you?'':`<div class="op ${V.cur==j&&V.phase=='play'?'cur':''} ${p.alive?'':'dead'}" data-i="${j}"${V.team?` style="border:3px solid ${TC[p.team]}"`:''}><b>${esc(p.name)}${p.bot?' 🤖':p.on?'':' ⌛'}</b>${V.team?`<br>${V.P[V.you].team==p.team?'напарник · ':''}${p.n} карт`:`<div class=bar><i style="width:${p.hp/V.max*100}%"></i></div>${p.hp} ХП · ${p.n} карт`}</div>`).join('');
+const tbar=V.team?`<div style="display:flex;gap:6px">${[0,1].map(t=>`<div class=op style="border-top:4px solid ${TC[t]}"><b>${t?'Синие':'Красные'}</b> ${V.tp[t]} / ${V.max}<div class=bar><i style="width:${V.tp[t]/V.max*100}%;background:${TC[t]}"></i></div></div>`).join('')}</div>`:'';
+const mates=V.mates&&V.mates.length?`<div style="font-size:12px;opacity:.8">Карты напарника:</div><div style="display:flex;gap:3px;overflow-x:auto">${V.mates.map(m=>m.hand.map(c=>`<div style="flex:none">${cardEl(c,.3)}</div>`).join('')).join('')}</div>`:'';
+const pop=ev.some(e=>e.k=='card');
+const mines=Object.keys(V.mines).map(c=>`<span class=mn style="background:${COL[c][1]}">💣 ${V.mines[c]}</span>`).join('')||'<span class=mn>Мин нет</span>';
+const wait=V.wait>=0&&V.wait!=V.you?`<div>⏳ ${esc(V.P[V.wait].name)} решает: контр-удар?</div>`:'';
+const nw=Math.max(0,V.hand.length-prevHand);prevHand=V.hand.length;
+A.innerHTML=`${tbar}<div id=opps>${opps}</div><div id=mid><div id=mines>${mines}</div><div id=row><button onclick="drawBtn()" style="padding:0;background:none;zoom:.55"><div class=c style="--a:#34343E;--k:#17171C;--t:#fff;font-size:20px;font-weight:700">Колода<br>${V.dn}</div></button><div class="${pop?'pop':''}">${cardEl(V.top,.7)}</div><span class=mn style="background:${COL[V.col][1]}">${CN[V.col]}</span></div><div id=log>${wait}${V.log.map(x=>`<div>${esc(x)}</div>`).join('')}</div></div>
+<div class="op ${my?'cur':''}" data-i="${V.you}"><b>Ты</b> — ${me.hp} ХП ${my?'· твой ход'+(V.drawn?' <button onclick="send({a:\'pass\'})">Пас</button>':''):''}${me.alive?'':'· ты выбыл'}<div class=bar><i style="width:${me.hp/V.max*100}%"></i></div></div>
+<div id=hand>${V.hand.map((c,k)=>`<div onclick="tap(${k})" class="${my&&!ok(c)?'dim':''} ${k>=V.hand.length-nw?'new':''}">${cardEl(c,.55)}</div>`).join('')}</div>${mates}`;
+if(V.cn){picking=0;let h='<h3>Тебя ударили! Контр-удар?</h3>';V.cn.v.forEach(v=>V.cn.en.forEach(j=>h+=`<button data-v="${v}" data-j="${j}">+${v} → ${esc(V.P[j].name)}</button>`));
+modal(h+'<br><button class=gh data-n=1>Не отвечать</button>',b=>{hide();send(b.dataset.n?{a:'nocounter'}:{a:'counter',v:+b.dataset.v,t:+b.dataset.j})})}
+else if(V.phase=='over'){const w=V.winner;modal(`<h3>${V.team?(w==V.P[V.you].team?'🏆 Ваша команда победила!':'💥 Ваша команда проиграла'):(w==V.you?'🏆 Ты победил!':w>=0?esc(V.P[w].name)+' победил':'💥 Ты проиграл')}</h3>${V.host?`<button class=red onclick="send({a:'start',hp:V.max})">Играть снова</button>`:'Ждём хозяина комнаты'}<br><button class=gh onclick="leave()">В меню</button>`,()=>{})}
+else if(!picking)hide();
+ev.forEach(f=>{if(f.k=='boom'){const b=document.createElement('div');b.className='bm';b.textContent='💥';document.body.appendChild(b);setTimeout(()=>b.remove(),1100);return}
+if(f.k!='hit'&&f.k!='heal'&&f.k!='rch')return;
+const el=document.querySelector(`[data-i="${f.i}"]`);if(!el)return;const g=f.k!='hit';
+if(!g){el.classList.add('hit');setTimeout(()=>el.classList.remove('hit'),500);if(f.i==V.you&&tg&&tg.HapticFeedback)tg.HapticFeedback.impactOccurred('heavy')}
+const r=el.getBoundingClientRect(),s=document.createElement('span');s.className='fl';s.textContent=f.k=='hit'?'−'+f.v:f.k=='heal'?'+'+f.v:'🔋 перезарядка';if(g)s.style.background='#2E8049';
+s.style.left=(r.left+r.width/2-30)+'px';s.style.top=r.top+'px';document.body.appendChild(s);setTimeout(()=>s.remove(),1700)})}
+
+const SL=(()=>{
+const sleep=ms=>new Promise(r=>setTimeout(r,ms*SP));
+let SP=+localStorage.sp||2,SV=null,T=150,mi=0,TY=[],J={},acc=0,dp=[],q=[],run=0,built=-1,ep=0,cfg={mi:0,T:150,n:2},codeIn='';
+const IC=['🎩','🚗','🐶','🎲','🦊','🚀','👻','🐸'],CL=['#e74c3c','#3498db','#2ecc71','#f1c40f','#e67e22','#9b59b6','#95a5a6','#1abc9c'],SC=['#2e9e4f','#8e44ad','#e67e22','#16a0b4','#c0392b'];
+const EM={D:'💥',H:'💚',R:'🪤',X:'🔀',C:'🚩'};
+const MP=[{n:'Лес',e:'🌲',t:'баланс',a:'#f6f0d4',b:'#d3e8b4',nf:'#4a3512',ns:'#fff',b1:'#1f6b3a',b2:'#2f9e8f',l:.075,s:.07,d:.06,h:.05,r:.025,x:.03},
+{n:'Пустыня',e:'🏜️',t:'много ловушек',a:'#fbe8c0',b:'#f0c987',nf:'#5a3a10',ns:'#fff',b1:'#a8431a',b2:'#d98a1f',l:.065,s:.06,d:.06,h:.05,r:.04,x:.03},
+{n:'Лёд',e:'❄️',t:'змей больше',a:'#f2fbff',b:'#c4e3f6',nf:'#1d3d5c',ns:'#fff',b1:'#1b4f9c',b2:'#3db6d6',l:.065,s:.08,d:.05,h:.05,r:.03,x:.04},
+{n:'Вулкан',e:'🌋',t:'жёсткий урон',a:'#5b4141',b:'#472f2f',nf:'#ffe9c8',ns:'#000',b1:'#3d0b0b',b2:'#c2410c',l:.06,s:.06,d:.085,h:.04,r:.03,x:.035}];
+const PIPS=[[4],[0,8],[0,4,8],[0,2,6,8],[0,2,4,6,8],[0,2,3,5,6,8]],FT=['rotateY(0)','rotateY(90deg)','rotateX(90deg)','rotateX(-90deg)','rotateY(-90deg)','rotateY(180deg)'],SHOW=[[0,0],[0,-90],[-90,0],[90,0],[0,90],[0,180]];
+const R_=()=>T/10;
+function xy(n){const r=(n-1)/10|0,k=(n-1)%10,c=r%2?9-k:k;return[c*10+5,(R_()-1-r)*10+5]}
+function tp(n,i){const R=R_();if(!n)return[4+i*11.5,100+120/R];const r=(n-1)/10|0,k=(n-1)%10,c=r%2?9-k:k;return[c*10+5+((i%3)-1)*2.3,((R-1-r)+.5)/R*100+((i/3|0)-1)*(100/R)*.23]}
+function snake(a,b,col){const[x1,y1]=xy(a),[x2,y2]=xy(b),dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy),nx=-dy/L,ny=dx/L,q=L*.26;
+ const p=`M${x1} ${y1}C${x1+dx*.33+nx*q} ${y1+dy*.33+ny*q} ${x1+dx*.66-nx*q} ${y1+dy*.66-ny*q} ${x2} ${y2}`;
+ return `<path d="${p}" fill="none" stroke="#000" stroke-opacity=".25" stroke-width="3.4" stroke-linecap="round" transform="translate(.5 .7)"/><path d="${p}" fill="none" stroke="${col}" stroke-width="3" stroke-linecap="round"/><path d="${p}" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="1.2" stroke-dasharray="1.2 2.2" stroke-linecap="round"/><circle cx="${x1}" cy="${y1}" r="2.6" fill="${col}"/><circle cx="${x1-.9}" cy="${y1-.8}" r=".8" fill="#fff"/><circle cx="${x1+.9}" cy="${y1-.8}" r=".8" fill="#fff"/><circle cx="${x1-.9}" cy="${y1-.8}" r=".35"/><circle cx="${x1+.9}" cy="${y1-.8}" r=".35"/><path d="M${x1} ${y1+2.3}l0 1.5m0 0l-.7.8m.7-.8l.7.8" stroke="#ff2d55" stroke-width=".4" fill="none"/>`}
+function ladder(a,b){const[x1,y1]=xy(a),[x2,y2]=xy(b),dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy),ox=-dy/L*1.5,oy=dx/L*1.5;let h='';
+ const n=Math.max(2,Math.round(L/4.5));for(let i=1;i<n;i++){const t=i/n,x=x1+dx*t,y=y1+dy*t;h+=`<line x1="${x+ox}" y1="${y+oy}" x2="${x-ox}" y2="${y-oy}" stroke="#9a5f24" stroke-width=".9" stroke-linecap="round"/>`}
+ const rl=(s,c,w)=>`<line x1="${x1+ox*s}" y1="${y1+oy*s}" x2="${x2+ox*s}" y2="${y2+oy*s}" stroke="${c}" stroke-width="${w}" stroke-linecap="round"/>`;
+ return `<g transform="translate(.5 .7)" opacity=".3">${rl(1,'#000',1.2)}${rl(-1,'#000',1.2)}</g>${h}${rl(1,'#b9793a',1.2)}${rl(-1,'#b9793a',1.2)}${rl(1,'#f0b36a',.4)}${rl(-1,'#f0b36a',.4)}`}
+function hop(i){$('#t'+i).animate([{transform:'none'},{transform:'translateY(-50%) scale(1.2)'},{transform:'none'}],{duration:85*SP})}
+function pop(i,t,c){const r=$('#t'+i).getBoundingClientRect(),e=document.createElement('div');e.className='cf';e.textContent=t;e.style.color=c;e.style.left=r.x+'px';e.style.top=r.y+'px';document.body.appendChild(e);
+ e.animate([{transform:'translateY(0)',opacity:1},{transform:'translateY(-44px)',opacity:0}],{duration:400*SP}).onfinish=()=>e.remove()}
+function faces(){$('#cube').innerHTML=PIPS.map((p,n)=>`<div class="f ${n?'':'one'}" style="transform:${FT[n]} translateZ(23px)">${Array.from({length:9},(_,j)=>p.includes(j)?'<i></i>':'<b></b>').join('')}</div>`).join('')}
+function showDie(n,roll){const[x,y]=SHOW[n-1];if(roll)acc+=720;$('#cube').style.transform=`rotateX(${x+acc}deg) rotateY(${y+acc}deg)`;if(roll){const w=$('#dw');w.classList.remove('jump');void w.offsetWidth;w.classList.add('jump')}}
+function boom(){for(let k=0;k<36;k++){const e=document.createElement('div');e.className='cf';e.textContent=['🎉','✨','⭐','🎊'][k%4];e.style.left=(30+Math.random()*40)+'vw';e.style.top='45vh';document.body.appendChild(e);
+ e.animate([{transform:'translate(0,0) scale(.5)',opacity:1},{transform:`translate(${(Math.random()-.5)*340}px,${(Math.random()-.8)*300}px) rotate(${Math.random()*540}deg) scale(1.4)`,opacity:0}],{duration:1000+Math.random()*400,easing:'ease-out'}).onfinish=()=>e.remove()}}
+const follow=i=>{const e=$('#t'+i);e&&e.scrollIntoView({block:'center',behavior:'smooth'})};
+function tok(i,sl){const e=$('#t'+i),[x,y]=tp(dp[i],i);e.classList.toggle('sl',!!sl);e.style.left=x+'%';e.style.top=y+'%'}
+const speed=()=>`<b>Скорость:</b> ${[['Быстро',1],['Норма',2],['Медленно',3]].map(([l,v])=>`<button class="${SP==v?'on':''}" onclick="SL.sp(${v})">${l}</button>`).join('')}`;
+const mapBtns=(cur,f)=>MP.map((m,i)=>`<button class="smp ${cur==i?'on':''}" onclick="${f}('mi',${i})">${m.e} ${m.n}<small>${m.t}</small></button>`).join('')+'<br>'+[150,300].map(v=>`<button class="${(f=='SL.set'?cfg.T:SV.T)==v?'on':''}" onclick="${f}('T',${v})">до ${v}</button>`).join('');
+function menu(){return `<div id=sl>${tgl()}<h1>🐍 Змеи и лестницы 🪜</h1><b>Карта и финиш:</b><br>${mapBtns(cfg.mi,'SL.set')}<br>${speed()}<br><b>Против ботов:</b><br>${[1,2,3,5,7].map(v=>`<button class="${cfg.n==v?'on':''}" onclick="SL.set('n',${v})">${v}</button>`).join('')}<br><button class=r onclick="SL.solo()">🤖 Играть</button><br><br><b>С друзьями:</b><br><button onclick="SL.create()">👥 Создать комнату</button><br><input id=ci maxlength=4 placeholder="КОД" value="${esc(codeIn)}" oninput="SL.code(this.value)"><button onclick="SL.join()">Войти</button>
+<p class=sr>У каждого 100 ❤. Один бросок за ход, даже если выпала 6.<br>💥 урон −15: бьёшь любого игрока · 💚 лечение +5<br>🪤 капкан: пропуск хода · 🔀 обмен местами с ближайшим впереди (если ты первый — лечение +10)<br>🚩 чекпоинт: можно сохранить место. Погиб — вернёшься на чекпоинт (или на старт) с полным ❤.<br>🏁 Финиш точно: лишнее отскакивает назад.</p></div>`}
+function lobby(){const V=SV;return `<div id=sl><div>Код комнаты</div><div class=code>${V.room}</div><button onclick="SL.share()">📨 Позвать друзей</button><br>${V.P.map(p=>`<div>${p.bot?'🤖':'👤'} ${esc(p.name)}${p.on||p.bot?'':' ⌛'}</div>`).join('')}<br>${V.host?`${mapBtns(V.mi,'SL.cfg')}<br><button onclick="SL.bot()">+ Бот</button><button class=r onclick="SL.start()">▶ Начать</button>`:`Карта: ${MP[V.mi].e} ${MP[V.mi].n}, до ${V.T}<br>Ждём, пока хозяин начнёт игру…`}<br>${speed()}<br><button class=gh onclick="SL.leave()">Выйти</button></div>`}
+const game=()=>`<div id=sl><div id=wrap><div id=bd></div><svg id=sv></svg><div id=tks></div></div><div id=ctl><div id=pl></div><div id=act></div><div id=srow><div id=stage><div id=dw><div id=cube></div></div></div><div id=smsg></div><div><button id=btn class=r onclick="SL.roll()">🎲 Бросить</button><button onclick="SL.sp()">⏩</button><button onclick="SL.leave()">☰</button></div></div></div></div>`;
+function build(){const R=R_(),M=MP[mi],sl=$('#sl'),b=document.body.style;let h='',s='',nums='',k=0;
+ [['--sa',M.a],['--sb',M.b],['--nf',M.nf],['--ns',M.ns]].forEach(([n,v])=>sl.style.setProperty(n,v));b.setProperty('--bg1',M.b1);b.setProperty('--bg2',M.b2);
+ for(let r=R-1;r>=0;r--)for(let q=0;q<10;q++){const c=r%2?9-q:q,n=r*10+c+1,t=TY[n];
+  h+=`<div class="sc ${(r+q)%2?'sd':''} ${n==T?'fin':''} k-${t}" style="grid-area:${R-r}/${q+1}"><span>${n==T?'🏁':EM[t]||''}</span></div>`;
+  if(n!=T)nums+=`<text x="${q*10+1}" y="${(R-1-r)*10+3}" font-size="2.4" font-weight="700" fill="var(--nf)" stroke="var(--ns)" stroke-opacity=".85" stroke-width=".7" paint-order="stroke">${n}</text>`}
+ for(const a in J)if(J[a]>a)s+=ladder(+a,J[a]);for(const a in J)if(J[a]<a)s+=snake(+a,J[a],SC[k++%SC.length]);
+ $('#bd').innerHTML=h;$('#sv').setAttribute('viewBox',`0 0 100 ${R*10}`);$('#sv').innerHTML=s+nums;
+ $('#tks').innerHTML=SV.P.map((p,i)=>`<div class=tok id=t${i} style="background:radial-gradient(circle at 35% 30%,#fff8,${CL[i]})">${IC[i]}</div>`).join('');faces();showDie(1,0);dp.forEach((_,i)=>tok(i))}
+const def=()=>{const V=SV;return V.phase=='over'?`🏆 ${V.P[V.winner].name} победил!`:V.wait>=0&&V.wait!=V.you?`⏳ ${V.P[V.wait].name} выбирает…`:V.cur==V.you?'Твой ход!':'Ходит '+V.P[V.cur].name};
+function ui(){const V=SV,a=V.ask;$('#smsg').textContent=def();
+ $('#pl').innerHTML=V.P.map((p,i)=>`<span class="spl ${i==V.cur&&V.phase=='play'?'cur':''}" style="--h:${p.hp}%">${IC[i]} ${esc(p.name.slice(0,8))} ${p.pos} ❤${p.hp}${p.cp?' 🚩'+p.cp:''}${p.skip?' 🪤':''}${p.on||p.bot?'':' ⌛'}</span>`).join('');
+ V.P.forEach((p,i)=>$('#t'+i).classList.toggle('me',i==V.cur));
+ $('#act').innerHTML=run?'':a?(a.t=='D'?'<b>💥 Урон −15! Кого бьём?</b><br>'+a.en.map(o=>`<button onclick="SL.pick(${o.j})">${IC[o.j]} ${esc(o.name)} (${o.hp}❤)</button>`).join(''):'<b>🚩 Чекпоинт! Сохранить здесь?</b><br><button onclick="SL.pick(1)">🚩 Сохранить</button><button onclick="SL.pick(0)">Нет</button>'):V.phase=='over'?(V.host?'<button class=r onclick="SL.start()">Играть снова</button>':'<small>Ждём хозяина…</small>'):'';
+ $('#btn').disabled=run||V.phase!='play'||V.cur!=V.you||V.wait>=0}
+function render(){const A=$('#app'),b=document.body.style;hide();
+ if(!SV||SV.phase=='lobby'){built=-1;b.removeProperty('--bg1');b.removeProperty('--bg2');A.innerHTML=SV?lobby():menu();return}
+ if(built!=SV.gid||!$('#bd')){A.innerHTML=game();T=SV.T;mi=SV.mi;TY=SV.bd.TY;J=SV.bd.J;dp=SV.P.map(p=>p.pos);build();built=SV.gid}
+ ui()}
+async function anim(ev){const m=t=>$('#smsg').textContent=t;
+ for(const e of ev){const i=e.i;if(e.t)m(e.t);
+  if(e.k=='roll'){showDie(e.d,1);await sleep(540)}
+  else if(e.k=='mv'){follow(i);for(const p of e.path){dp[i]=p;tok(i);hop(i);await sleep(85)}}
+  else if(e.k=='jump'){await sleep(150);dp[i]=e.to;tok(i,1);await sleep(400);tok(i)}
+  else if(e.k=='hit'){pop(i,'−'+e.v,'#ff5a4d');$('#t'+i).animate([{filter:'brightness(2.5)'},{filter:'none'}],{duration:150*SP});if(e.dead){await sleep(300);dp[i]=e.pos;tok(i,1)}await sleep(e.dead?450:300)}
+  else if(e.k=='heal'){pop(i,'+'+e.v,'#4cff8a');await sleep(250)}
+  else if(e.k=='swap'){dp[i]=e.pi;dp[e.a]=e.pa;tok(i,1);tok(e.a,1);await sleep(450);tok(i);tok(e.a)}
+  else if(e.k=='cp'){pop(i,'🚩','#fff');await sleep(250)}
+  else if(e.k=='trap'||e.k=='skip')await sleep(e.k=='skip'?450:300);
+  else if(e.k=='msg')await sleep(250);
+  else if(e.k=='win'&&i==SV.you)boom()}}
+async function pump(){if(run)return;run=1;
+ while(q.length){const m=q.shift(),e=ep;try{if(m.ev.length&&SV&&built==m.v.gid&&$('#bd'))await anim(m.ev)}catch(x){}
+  if(e!=ep)continue;SV=m.v;render();if($('#bd')&&built==SV.gid){dp=SV.P.map(p=>p.pos);dp.forEach((_,i)=>tok(i))}}
+ run=0;if(SV)render()}
+function share(){const link=SV.bot?`https://t.me/${SV.bot}${SV.app?'/'+SV.app:''}?startapp=s_${SV.room}`:location.href;
+ const u='https://t.me/share/url?url='+encodeURIComponent(link)+'&text='+encodeURIComponent('Го играть в Змеи и лестницы! Код комнаты: '+SV.room);tg?tg.openTelegramLink(u):open(u)}
+function sp(v){SP=v||SP%3+1;localStorage.sp=SP;document.documentElement.style.setProperty('--sp',SP);render()}
+return{V:()=>SV,render,share,sp,msg:m=>{q.push(m);pump()},set:(k,v)=>{cfg[k]=v;render()},code:v=>codeIn=v,
+ solo:()=>send({a:'s_solo',mi:cfg.mi,T:cfg.T,n:cfg.n}),create:()=>send({a:'s_create',mi:cfg.mi,T:cfg.T}),join:()=>send({a:'s_join',room:codeIn}),
+ roll:()=>{if(!run&&SV&&SV.phase=='play'&&SV.cur==SV.you&&SV.wait<0)send({a:'s_roll'})},pick:v=>{$('#act').innerHTML='';send({a:'s_pick',v})},
+ cfg:(k,v)=>send({a:'s_cfg',[k]:v}),bot:()=>send({a:'s_bot'}),start:()=>send({a:'s_start'}),
+ leave:()=>{send({a:'s_leave'});ep++;q=[];SV=null;built=-1;render()}}})();
+let G=localStorage.g=='sl'?'sl':'uno';
+const tgl=()=>`<div class="tgl ${G=='sl'?'n':''}" onclick="swap()"><span>☀️</span><span>🌙</span><i></i></div>`;
+function theme(){document.body.classList.toggle('night',G=='sl')}
+function swap(){G=G=='uno'?'sl':'uno';localStorage.g=G;theme();render([])}
+theme();
+render([]);conn();
+</script>
+</body>
+</html>
